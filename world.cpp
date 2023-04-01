@@ -10,11 +10,11 @@ World::World() {
   bodies = {
     std::make_shared<Sphere>(0, 1.0, Vec3(-0.5, 0.0, -1.0), 0.3, Color(1.0, 1.0, 1.0)),// Color(1.0, 0.0, 0.0)),
     std::make_shared<Sphere>(1, 0.5, Vec3(0.5, 0.0, -1.1), 0.3, Color(1.0, 1.0, 1.0)), // Color(0.0, 1.0, 0.0)),
-    std::make_shared<Ground>(2, -0.5, Color(0.777, 0.5, 0.5)),
-    std::make_shared<Plane>(3, 0.0, Point3(0.0, -0.4, -1.5), Color(1.0, 1.0, 0.0), Vec3(0.0, 1.0, 0.1), 1.0, 100.0, 100.0),
+    std::make_shared<Ground>(2, -0.5, Color(1.0, 1.0, 1.0)),
+    // std::make_shared<Plane>(3, 0.0, Point3(0.0, -0.4, -1.5), Color(1.0, 1.0, 0.0), Vec3(0.0, 1.0, 0.1), 1.0, 100.0, 100.0),
   };
 
   lights = {
-    Light(Point3(0.0, 1000.0, 1000.0), Color(0.0, 0.0, 1.0)),
+    Light(Point3(0.0, 1000.0, 1000.0), Color(1.0, 1.0, 1.0)),
   };
 }
