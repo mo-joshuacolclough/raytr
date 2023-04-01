@@ -10,6 +10,7 @@ Ground::Ground(unsigned int id_, float yval, Color color) {
   id = id_;
   col = color;
   pos[1] = yval;
+  reflectivity = 0.0;
 }
 
 float Ground::hit(const Ray& ray) const {
@@ -25,8 +26,8 @@ Vec3 Ground::normal_at(const Point3 &other_pos) const {
 }
 
 Color Ground::color_at(const Point3 &other_pos) const {
-  Vec3 dist_vec = pos - other_pos;
   /*
+  Vec3 dist_vec = pos - other_pos;
   bool white = (static_cast<int>(std::round(std::abs(dist_vec.x())/CHECK_DIST)) % 2) ^
                (static_cast<int>(std::round(std::abs(dist_vec.z())/CHECK_DIST)) % 2);
   */

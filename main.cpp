@@ -12,6 +12,7 @@
 #include "plane.h"
 
 #include <gint/display.h>
+#include <gint/keycodes.h>
 #include <gint/keyboard.h>
 
 #define MAX_REFLECT 1
@@ -88,7 +89,7 @@ int main() {
   World world = World();
 
   //    const float aspect_ratio = 1.0;
-  const int rectangle_size = 8;
+  const int rectangle_size = 10;
 
   const int image_width = DWIDTH / rectangle_size;
   const int image_height = DHEIGHT / rectangle_size;
@@ -100,7 +101,8 @@ int main() {
   float focal_length = 1.0;
 
   Point3 origin = Point3(0, 0, 0);
-  float camera_y_angle = 0.2;
+  const float da = 3.141592653589793238462643/8.0;
+  float camera_y_angle = 0.0;
   // float camera_x_angle = 0.0;
 
   Vec3 horizontal = Vec3(viewport_width, 0, 0);
@@ -109,33 +111,89 @@ int main() {
   Vec3 lower_left_corner = origin - horizontal/2 - vertical/2 - Vec3(0, 0, focal_length);
 
   // Render
-
-  dclear(C_BLACK);
-
+  bool stop = false;
   int corrected_j;
-  for (int j = image_height-1; j >= 0; --j) {
-    for (int i = 0; i < image_width; ++i) {
-      float u = static_cast<float>(i)/(image_width-1);
-      float v = static_cast<float>(j)/(image_height-1);
-      Vec3 ray_direction = lower_left_corner + u * horizontal + v * vertical - origin;
-      ray_direction = rotate_y(ray_direction, camera_y_angle);
+  float u, v;
+  Vec3 ray_direction;
+  Ray r;
+  Color pixel_col;
+  bool redraw = true;
 
-      Ray r = Ray(origin, ray_direction);
-      Color pixel_col = ray_color(r, world, Color(1.0, 1.0, 1.0), 0);
+  while (!stop) {
+    if (redraw) {
+      dclear(C_BLACK);
 
-      const auto col = get_color_t(pixel_col);
-      corrected_j = image_height - j;
+      lower_left_corner = origin - horizontal/2 - vertical/2 - Vec3(0, 0, focal_length);
 
-      // dpixel(i, corrected_j, col);      
-      drect(i * rectangle_size, corrected_j * rectangle_size,
-	    (i + 1) * rectangle_size, (corrected_j + 1) * rectangle_size,
-	    col);
+      for (int j = image_height-1; j >= 0; --j) {
+        for (int i = 0; i < image_width; ++i) {
+          u = static_cast<float>(i)/(image_width-1);
+          v = static_cast<float>(j)/(image_height-1);
+          ray_direction = lower_left_corner + u * horizontal + v * vertical - origin;
+          ray_direction = rotate_y(ray_direction, camera_y_angle);
+
+          r = Ray(origin, ray_direction);
+          pixel_col = ray_color(r, world, Color(1.0, 1.0, 1.0), 0);
+
+          const auto col = get_color_t(pixel_col);
+          corrected_j = image_height - j;
+
+          // dpixel(i, corrected_j, col);      
+          drect(i * rectangle_size, corrected_j * rectangle_size,
+              (i + 1) * rectangle_size, (corrected_j + 1) * rectangle_size,
+              col);
+
+        }
+      }
 
       dupdate();
+      redraw = false;
+    }
+
+    key_event_t key_press = getkey();
+    if (key_press.type == KEYEV_DOWN) {
+      switch (key_press.key) {
+        case KEY_LEFT:
+          camera_y_angle += da;
+          redraw = true;
+          break;
+        case KEY_RIGHT:
+          camera_y_angle -= da;
+          redraw = true;
+          break;
+        // -- Forward, back --
+        case KEY_8:
+          origin += rotate_y(Vec3(0, 0, -0.5), camera_y_angle);
+          redraw = true;
+          break;
+        case KEY_5:
+          origin += rotate_y(Vec3(0, 0, 0.5), camera_y_angle);
+          redraw = true;
+          break;
+        // -- Left, right --
+        case KEY_4:
+          origin += rotate_y(Vec3(-0.5, 0, 0.0), camera_y_angle);
+          redraw = true;
+          break;
+        case KEY_6:
+          origin += rotate_y(Vec3(0.5, 0, 0.0), camera_y_angle);
+          redraw = true;
+          break;
+        // -- Up, down --
+        case KEY_9:
+          origin += rotate_y(Vec3(0.0, 0.5, 0.0), camera_y_angle);
+          redraw = true;
+          break;
+        case KEY_7:
+          origin += rotate_y(Vec3(0.0, -0.5, 0.0), camera_y_angle);
+          redraw = true;
+          break;
+        case KEY_EXIT:
+          stop = true;
+          break;
+      }
     }
   }
-
-  getkey();
 
   return 1;
 }
