@@ -19,5 +19,5 @@ Point3 Ray::at(float t) const { return o + t * dir; }
 Ray Ray::reflect(const Vec3& normal,
                  Vec3 new_origin,
                  const double reflectivity) const {
-  return Ray(new_origin, dir - 2 * dot(dir, normal) * normal, brightness * reflectivity);
+  return Ray(new_origin, dir - 2 * dot(dir, normal) * normal, brightness);
 }
