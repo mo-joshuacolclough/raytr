@@ -1,3 +1,4 @@
+#include <cmath>
 #include <memory>
 #include <vector>
 #include "vec3.h"
@@ -72,6 +73,13 @@ Color ray_color(const Ray& r, const World& world, Color last_col, unsigned int d
   return last_col * ((1.0 - t) * Color(1.0, 1.0, 1.0) + t * Color(0.4, 0.7, 1.0));
 }
 
+Vec3 rotate_y(Vec3 in, float a) {
+  Vec3 out;
+  out[0] = in[0] * cos(a) + in[2] * sin(a);
+  out[1] = in[1];
+  out[2] = in[2] * cos(a) - in[0] * sin(a);
+  return out;
+}
 
 int main() {
   // Following https://raytracing.github.io/books/RayTracingInOneWeekend.html
@@ -92,8 +100,12 @@ int main() {
   float focal_length = 1.0;
 
   Point3 origin = Point3(0, 0, 0);
+  float camera_y_angle = 0.2;
+  // float camera_x_angle = 0.0;
+
   Vec3 horizontal = Vec3(viewport_width, 0, 0);
   Vec3 vertical = Vec3(0, viewport_height, 0);
+
   Vec3 lower_left_corner = origin - horizontal/2 - vertical/2 - Vec3(0, 0, focal_length);
 
   // Render
@@ -105,7 +117,10 @@ int main() {
     for (int i = 0; i < image_width; ++i) {
       float u = static_cast<float>(i)/(image_width-1);
       float v = static_cast<float>(j)/(image_height-1);
-      Ray r = Ray(origin, lower_left_corner + u * horizontal + v * vertical - origin);
+      Vec3 ray_direction = lower_left_corner + u * horizontal + v * vertical - origin;
+      ray_direction = rotate_y(ray_direction, camera_y_angle);
+
+      Ray r = Ray(origin, ray_direction);
       Color pixel_col = ray_color(r, world, Color(1.0, 1.0, 1.0), 0);
 
       const auto col = get_color_t(pixel_col);
