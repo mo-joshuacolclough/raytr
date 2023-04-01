@@ -13,7 +13,7 @@
 #include <gint/display.h>
 #include <gint/keyboard.h>
 
-#define MAX_REFLECT 2
+#define MAX_REFLECT 1
 
 
 Color ray_color(const Ray& r, const World& world, Color last_col, unsigned int depth) {
@@ -80,8 +80,10 @@ int main() {
   World world = World();
 
   //    const float aspect_ratio = 1.0;
-  const int image_width = DWIDTH;
-  const int image_height = DHEIGHT;
+  const int rectangle_size = 8;
+
+  const int image_width = DWIDTH / rectangle_size;
+  const int image_height = DHEIGHT / rectangle_size;
   const float aspect_ratio = static_cast<float>(image_width)/static_cast<float>(image_height);
 
   // Camera (maths from https://raytracing.github.io/books/RayTracingInOneWeekend.html)
@@ -97,6 +99,8 @@ int main() {
   // Render
 
   dclear(C_BLACK);
+
+  int corrected_j;
   for (int j = image_height-1; j >= 0; --j) {
     for (int i = 0; i < image_width; ++i) {
       float u = static_cast<float>(i)/(image_width-1);
@@ -105,13 +109,18 @@ int main() {
       Color pixel_col = ray_color(r, world, Color(1.0, 1.0, 1.0), 0);
 
       const auto col = get_color_t(pixel_col);
-      dpixel(i, j, col);
+      corrected_j = image_height - j;
+
+      // dpixel(i, corrected_j, col);      
+      drect(i * rectangle_size, corrected_j * rectangle_size,
+	    (i + 1) * rectangle_size, (corrected_j + 1) * rectangle_size,
+	    col);
+
+      dupdate();
     }
   }
 
-  dupdate();
-
   getkey();
 
-  return 0;
+  return 1;
 }
