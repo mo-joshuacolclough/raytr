@@ -1,6 +1,5 @@
 #include "ray.h"
 #include "vec3.h"
-#include <iostream>
 
 Ray::Ray() : brightness(1.0) {}
 

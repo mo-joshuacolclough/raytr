@@ -1,9 +1,10 @@
 #ifndef COLOR_H
 #define COLOR_H
 
-#include "vec3.h"
-#include <iostream>
+#include <gint/display.h>
 
-void write_color(std::ostream& out, Color pixel_color);
+#include "vec3.h"
+
+color_t get_color_t(Color pixel_color);
 
 #endif // COLOR_H

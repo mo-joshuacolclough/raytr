@@ -1,8 +1,6 @@
 #ifndef VEC3_H
 #define VEC3_H
 
-#include <iostream>
-
 class Vec3 {
  public:
   float e[3];
@@ -32,7 +30,6 @@ Vec3 operator*(const Vec3& u, const Vec3& v);
 Vec3 operator/(const Vec3&u, float s);
 Vec3 operator-(const Vec3& u, const Vec3& v);
 
-std::ostream& operator<<(std::ostream &out, const Vec3 &v);
 float dot(const Vec3& u, const Vec3& v);
 Vec3 cross(const Vec3 &u, const Vec3& v);
 Vec3 unit_vector(Vec3 v);

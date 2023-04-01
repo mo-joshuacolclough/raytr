@@ -1,7 +1,5 @@
-#include <iostream>
 #include <memory>
 #include <vector>
-#include <fstream>
 #include "vec3.h"
 #include "color.h"
 #include "ray.h"
@@ -11,6 +9,9 @@
 #include "ground.h"
 #include "world.h"
 #include "plane.h"
+
+#include <gint/display.h>
+#include <gint/keyboard.h>
 
 #define MAX_REFLECT 2
 
@@ -63,10 +64,7 @@ Color ray_color(const Ray& r, const World& world, Color last_col, unsigned int d
       final_col = ray_color(reflected, world, final_col, depth+1);
     }
 
-    Vec3 n = unit_vector(r.at(t) - hitobj->pos);
-    if (r.getBrightness() < 1.0) {
-      std::cout << "Ray brightness: " << r.getBrightness() << std::endl;
-    }
+    // Vec3 n = unit_vector(r.at(t) - hitobj->pos);
     return final_col * r.getBrightness();
   }
 
@@ -81,14 +79,10 @@ int main() {
   // Scene
   World world = World();
 
-  // Image
-  // open file
-  std::ofstream imgfile("../output.ppm");
-
-  const float aspect_ratio = 16.0/9.0;
   //    const float aspect_ratio = 1.0;
-  const int image_width = 1280;
-  const int image_height = static_cast<int>(image_width/aspect_ratio);
+  const int image_width = DWIDTH;
+  const int image_height = DHEIGHT;
+  const float aspect_ratio = static_cast<float>(image_width)/static_cast<float>(image_height);
 
   // Camera (maths from https://raytracing.github.io/books/RayTracingInOneWeekend.html)
   float viewport_height = 2.0;
@@ -101,23 +95,23 @@ int main() {
   Vec3 lower_left_corner = origin - horizontal/2 - vertical/2 - Vec3(0, 0, focal_length);
 
   // Render
-  imgfile << "P3\n" << image_width << ' ' << image_height << "\n255\n";
 
+  dclear(C_BLACK);
   for (int j = image_height-1; j >= 0; --j) {
-    std::cout << "\rScanlines remaining: " << j << ' ' << std::flush;
     for (int i = 0; i < image_width; ++i) {
       float u = static_cast<float>(i)/(image_width-1);
       float v = static_cast<float>(j)/(image_height-1);
       Ray r = Ray(origin, lower_left_corner + u * horizontal + v * vertical - origin);
       Color pixel_col = ray_color(r, world, Color(1.0, 1.0, 1.0), 0);
 
-      write_color(imgfile, pixel_col);
+      const auto col = get_color_t(pixel_col);
+      dpixel(i, j, col);
     }
   }
 
-  std::cout << std::endl;
+  dupdate();
 
-  imgfile.close();
+  getkey();
 
   return 0;
 }

@@ -49,8 +49,6 @@ Vec3& Vec3::operator/=(float s) {
 float Vec3::length_squared() const { return e[0]*e[0] + e[1]*e[1] + e[2]*e[2]; }
 float Vec3::length() const { return std::sqrt(length_squared()); }
 
-std::ostream& operator<<(std::ostream& out, const Vec3& v) { return out << v[0] << ' ' << v[1] << ' ' << v[2]; }
-
 float dot(const Vec3&u, const Vec3& v) { return u[0] * v[0] + u[1] * v[1] + u[2] * v[2]; }
 
 Vec3 cross(const Vec3& u, const Vec3& v) {
