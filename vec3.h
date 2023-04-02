@@ -7,9 +7,12 @@ class Vec3 {
 
   Vec3();
   Vec3(float x, float y, float z);
-  float x() const;
-  float y() const;
-  float z() const;
+  const float& x() const { return e[0]; }
+  float& x() { return e[0]; }
+  const float& y() const { return e[1]; }
+  float& y() { return e[1]; }
+  const float& z() const { return e[2]; }
+  float& z() { return e[2]; }
 
   float operator[](int i) const;
   float& operator[](int i);

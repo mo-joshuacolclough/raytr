@@ -7,20 +7,20 @@ class Ray {
  private:
   Point3 o; // Origin
   Vec3 dir; // Direction
-  double brightness;
+  float brightness;
  public:
   Ray();
   Ray(const Point3& origin, const Vec3& direction);
-  Ray(const Point3& origin, const Vec3& direction, const double brightness);
+  Ray(const Point3& origin, const Vec3& direction, const float brightness);
 
   Point3 origin() const;
   Vec3 direction() const;
   Point3 at(float t) const;
-  Ray reflect(const Vec3& normal,
-              Vec3 new_origin,
-              const double reflectivity) const;
+  void reflect(const Vec3& normal,
+               Vec3 new_origin,
+               const float reflectivity);
 
-  double getBrightness() const { return brightness; }
+  float getBrightness() const { return brightness; }
 };
 
 #endif // RAY_H

@@ -17,9 +17,9 @@
 #include <gint/keyboard.h>
 
 #define MAX_REFLECT 1
+#define PI 3.141592653589793238462643f
 
-
-Color ray_color(const Ray& r, const World& world, Color last_col, unsigned int depth) {
+Color ray_color(Ray r, const World& world, Color last_col, unsigned int depth) {
   float t = -1.0; // position along ray of closest hit
   std::shared_ptr<Body> hitobj; // object that was hit
 
@@ -39,11 +39,11 @@ Color ray_color(const Ray& r, const World& world, Color last_col, unsigned int d
 
     // For each light, combine color
     // also check if light is blocked by another object
-    const float numLightf = static_cast<float>(world.lights.size());
+    // const float numLightf = static_cast<float>(world.lights.size());
     for (const Light& l : world.lights) {
       // Get direction to light from hit pos
-      Vec3 dir = l.pos - hitpos;
-      Vec3 dir_unit = unit_vector(dir);
+      Vec3 dir_unit = l.pos - hitpos;
+      dir_unit = unit_vector(dir_unit);
 
       Ray shadowray = Ray(hitpos, dir_unit);
       for (const std::shared_ptr<Body>& b : world.bodies) {
@@ -54,17 +54,17 @@ Color ray_color(const Ray& r, const World& world, Color last_col, unsigned int d
       }
 
       // dot product with normal = lighting
-      float d = dot(unit_vector(dir), hitnorm);
+      float d = dot(dir_unit, hitnorm);
       d = d < 0.0 ? 0.0 : d;
-      final_col[0] *= l.col[0] * d / numLightf;
-      final_col[1] *= l.col[1] * d / numLightf;
-      final_col[2] *= l.col[2] * d / numLightf;
+      final_col[0] *= l.col[0] * d;
+      final_col[1] *= l.col[1] * d;
+      final_col[2] *= l.col[2] * d;
     }
 
     // Reflect and call again
     if (depth < MAX_REFLECT && hitobj->reflectivity != 0.0) {
-      Ray reflected = r.reflect(hitnorm, hitpos, hitobj->reflectivity);
-      final_col = ray_color(reflected, world, final_col, depth+1);
+      r.reflect(hitnorm, hitpos, hitobj->reflectivity);
+      final_col = ray_color(r, world, final_col, depth+1);
     }
 
     // Vec3 n = unit_vector(r.at(t) - hitobj->pos);
@@ -89,11 +89,15 @@ int main() {
   // Scene
   World world = World();
 
-  //    const float aspect_ratio = 1.0;
-  const int rectangle_size = 6;
+  const int START_RECT_SIZE = 32;
+  const int MIN_RECT_SIZE = 2;
+  const int RECT_INCREMENT = 2;
 
-  const int image_width = DWIDTH / rectangle_size;
-  const int image_height = DHEIGHT / rectangle_size;
+  //    const float aspect_ratio = 1.0;
+  int rectangle_size = START_RECT_SIZE;
+  int image_width = DWIDTH / rectangle_size;
+  int image_height = DHEIGHT / rectangle_size;
+
   const float aspect_ratio = static_cast<float>(image_width)/static_cast<float>(image_height);
 
   // Camera (maths from https://raytracing.github.io/books/RayTracingInOneWeekend.html)
@@ -102,7 +106,7 @@ int main() {
   float focal_length = 1.0;
 
   Point3 origin = Point3(0, 0, 0);
-  const float da = 3.141592653589793238462643/8.0;
+  const float da = PI/8.0;
   float camera_y_angle = 0.0;
   // float camera_x_angle = 0.0;
 
@@ -116,88 +120,101 @@ int main() {
   int corrected_j;
   float u, v;
   Vec3 ray_direction;
-  Ray r;
   Color pixel_col;
-  bool redraw = true;
+  bool keyboard_pressed = false;
+
+  auto set_res = [&](int rect_size) {
+    rectangle_size = rect_size;
+    image_width = DWIDTH / rectangle_size;
+    image_height = DHEIGHT / rectangle_size;
+  };
 
   // OVERCLOCK
   clock_set_speed(CLOCK_SPEED_F4);
 
+  float a = 0.0;
+
   while (!stop) {
-    if (redraw) {
-      dclear(C_BLACK);
-
-      lower_left_corner = origin - horizontal/2 - vertical/2 - Vec3(0, 0, focal_length);
-
-      for (int j = image_height-1; j >= 0; --j) {
-        for (int i = 0; i < image_width; ++i) {
-          u = static_cast<float>(i)/(image_width-1);
-          v = static_cast<float>(j)/(image_height-1);
-          ray_direction = lower_left_corner + u * horizontal + v * vertical - origin;
-          ray_direction = rotate_y(ray_direction, camera_y_angle);
-
-          r = Ray(origin, ray_direction);
-          pixel_col = ray_color(r, world, Color(1.0, 1.0, 1.0), 0);
-
-          const auto col = get_color_t(pixel_col);
-          corrected_j = image_height - j;
-
-          // dpixel(i, corrected_j, col);      
-          drect(i * rectangle_size, corrected_j * rectangle_size,
-              (i + 1) * rectangle_size, (corrected_j + 1) * rectangle_size,
-              col);
-
-        }
-      }
-
-      dupdate();
-      redraw = false;
+    if (keyboard_pressed) {
+      // set_res(START_RECT_SIZE);
+      keyboard_pressed = false;
     }
 
-    key_event_t key_press = getkey();
-    if (key_press.type == KEYEV_DOWN) {
+    // Update
+    a += 0.5;
+    world.bodies[0]->pos.y() = (sin(a) / 4.0) + 0.25;
+    
+    // Draw
+    lower_left_corner = origin - horizontal/2 - vertical/2 - Vec3(0, 0, focal_length);
+
+    for (int j = image_height-1; j >= 0; --j) {
+      for (int i = 0; i < image_width; ++i) {
+        u = static_cast<float>(i)/(image_width-1);
+        v = static_cast<float>(j)/(image_height-1);
+        ray_direction = lower_left_corner + u * horizontal + v * vertical - origin;
+        ray_direction = rotate_y(ray_direction, camera_y_angle);
+
+        pixel_col = ray_color(Ray(origin, ray_direction), world, Color(1.0, 1.0, 1.0), 0);
+
+        const auto col = get_color_t(pixel_col);
+        corrected_j = image_height - j;
+
+        drect(i* rectangle_size, (corrected_j - 1) * rectangle_size,
+              (i + 1) * rectangle_size, (corrected_j) * rectangle_size,
+              col);
+      }
+    }
+
+    dupdate();
+
+    key_event_t key_press = pollevent();
+    if (key_press.type != KEYEV_NONE &&
+        (key_press.type == KEYEV_DOWN ||
+         key_press.type == KEYEV_HOLD)) {
       switch (key_press.key) {
         case KEY_LEFT:
           camera_y_angle += da;
-          redraw = true;
           break;
         case KEY_RIGHT:
           camera_y_angle -= da;
-          redraw = true;
           break;
         // -- Forward, back --
         case KEY_8:
           origin += rotate_y(Vec3(0, 0, -0.25), camera_y_angle);
-          redraw = true;
           break;
         case KEY_5:
           origin += rotate_y(Vec3(0, 0, 0.25), camera_y_angle);
-          redraw = true;
           break;
         // -- Left, right --
         case KEY_4:
           origin += rotate_y(Vec3(-0.25, 0, 0.0), camera_y_angle);
-          redraw = true;
           break;
         case KEY_6:
           origin += rotate_y(Vec3(0.25, 0, 0.0), camera_y_angle);
-          redraw = true;
           break;
         // -- Up, down --
         case KEY_9:
           origin += rotate_y(Vec3(0.0, 0.25, 0.0), camera_y_angle);
-          redraw = true;
           break;
         case KEY_7:
           origin += rotate_y(Vec3(0.0, -0.25, 0.0), camera_y_angle);
-          redraw = true;
+          break;
+        // -- Resolution --
+        case KEY_COMMA:
+          set_res(rectangle_size + RECT_INCREMENT);
+          break;
+        case KEY_ARROW:
+          set_res(std::max(rectangle_size - RECT_INCREMENT, MIN_RECT_SIZE));
           break;
         case KEY_EXIT:
           stop = true;
           break;
       }
+
+      keyboard_pressed = true;
+      clearevents();
     }
   }
 
-  return 1;
+  return 0;
 }

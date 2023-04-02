@@ -7,7 +7,7 @@ Ray::Ray(const Point3& origin, const Vec3& direction) :
   o(origin), dir(unit_vector(direction)), brightness(1.0)
 {}
 
-Ray::Ray(const Point3& origin, const Vec3& direction, const double brightness) :
+Ray::Ray(const Point3& origin, const Vec3& direction, const float brightness) :
   o(origin), dir(unit_vector(direction)), brightness(brightness)
 {}
 
@@ -16,8 +16,9 @@ Point3 Ray::origin() const { return o; }
 Vec3 Ray::direction() const { return dir; }
 Point3 Ray::at(float t) const { return o + t * dir; }
 
-Ray Ray::reflect(const Vec3& normal,
-                 Vec3 new_origin,
-                 const double reflectivity) const {
-  return Ray(new_origin, dir - 2 * dot(dir, normal) * normal, brightness);
+void Ray::reflect(const Vec3& normal,
+                  Vec3 new_origin,
+                  const float reflectivity) {
+  o = new_origin;
+  dir = dir - 2 * dot(dir, normal) * normal;
 }

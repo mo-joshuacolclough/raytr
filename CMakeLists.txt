@@ -8,6 +8,7 @@ include(GenerateG1A)
 include(GenerateG3A)
 include(Fxconv)
 find_package(Gint 2.9 REQUIRED)
+find_package(LibProf 2.1 REQUIRED)
 
 set(SOURCES
     main.cpp
@@ -44,7 +45,7 @@ fxconv_declare_assets(${ASSETS} ${ASSETS_fx} ${ASSETS_cg} WITH_METADATA)
 
 add_executable(myaddin ${SOURCES} ${ASSETS} ${ASSETS_${FXSDK_PLATFORM}})
 target_compile_options(myaddin PRIVATE -Wall -Wextra -Os -std=c++20)
-target_link_libraries(myaddin Gint::Gint -lstdc++)
+target_link_libraries(myaddin Gint::Gint LibProf::LibProf -lstdc++)
 add_link_options(-Wl --no-undefined)
 
 if("${FXSDK_PLATFORM_LONG}" STREQUAL fx9860G)

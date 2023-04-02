@@ -4,10 +4,6 @@
 Vec3::Vec3(): e{0.0, 0.0, 0.0} {}
 Vec3::Vec3(float x, float y, float z): e{x, y, z} {};
 
-float Vec3::x() const { return e[0]; }
-float Vec3::y() const { return e[1]; }
-float Vec3::z() const { return e[2]; }
-
 float Vec3::operator[](int i) const { return e[i]; }
 float& Vec3::operator[](int i) { return e[i]; }
 
