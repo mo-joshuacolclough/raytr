@@ -11,6 +11,7 @@
 #include "world.h"
 #include "plane.h"
 
+#include <gint/clock.h>
 #include <gint/display.h>
 #include <gint/keycodes.h>
 #include <gint/keyboard.h>
@@ -89,7 +90,7 @@ int main() {
   World world = World();
 
   //    const float aspect_ratio = 1.0;
-  const int rectangle_size = 10;
+  const int rectangle_size = 6;
 
   const int image_width = DWIDTH / rectangle_size;
   const int image_height = DHEIGHT / rectangle_size;
@@ -118,6 +119,9 @@ int main() {
   Ray r;
   Color pixel_col;
   bool redraw = true;
+
+  // OVERCLOCK
+  clock_set_speed(CLOCK_SPEED_F4);
 
   while (!stop) {
     if (redraw) {
@@ -163,29 +167,29 @@ int main() {
           break;
         // -- Forward, back --
         case KEY_8:
-          origin += rotate_y(Vec3(0, 0, -0.5), camera_y_angle);
+          origin += rotate_y(Vec3(0, 0, -0.25), camera_y_angle);
           redraw = true;
           break;
         case KEY_5:
-          origin += rotate_y(Vec3(0, 0, 0.5), camera_y_angle);
+          origin += rotate_y(Vec3(0, 0, 0.25), camera_y_angle);
           redraw = true;
           break;
         // -- Left, right --
         case KEY_4:
-          origin += rotate_y(Vec3(-0.5, 0, 0.0), camera_y_angle);
+          origin += rotate_y(Vec3(-0.25, 0, 0.0), camera_y_angle);
           redraw = true;
           break;
         case KEY_6:
-          origin += rotate_y(Vec3(0.5, 0, 0.0), camera_y_angle);
+          origin += rotate_y(Vec3(0.25, 0, 0.0), camera_y_angle);
           redraw = true;
           break;
         // -- Up, down --
         case KEY_9:
-          origin += rotate_y(Vec3(0.0, 0.5, 0.0), camera_y_angle);
+          origin += rotate_y(Vec3(0.0, 0.25, 0.0), camera_y_angle);
           redraw = true;
           break;
         case KEY_7:
-          origin += rotate_y(Vec3(0.0, -0.5, 0.0), camera_y_angle);
+          origin += rotate_y(Vec3(0.0, -0.25, 0.0), camera_y_angle);
           redraw = true;
           break;
         case KEY_EXIT:
