@@ -66,10 +66,6 @@ Color ray_color(const Ray& r, const World& world, Color last_col, unsigned int d
       final_col = ray_color(reflected, world, final_col, depth+1);
     }
 
-    Vec3 n = unit_vector(r.at(t) - hitobj->pos);
-    if (r.getBrightness() < 1.0) {
-      std::cout << "Ray brightness: " << r.getBrightness() << std::endl;
-    }
     return final_col * r.getBrightness();
   }
 
@@ -117,11 +113,14 @@ int main() {
   float a = 0.0;
 
   //Event handler
-  SDL_Event e;
+  SDL_Event event;
 
   while(!quit) {
-    while(SDL_PollEvent(&e) != 0) {
-      if (e.type == SDL_QUIT) {
+    // Keyboard
+    while(SDL_PollEvent(&event) != 0) {
+      camera.handle_event(event);
+
+      if (event.type == SDL_QUIT) {
         quit = true;
       }
     }
@@ -129,6 +128,8 @@ int main() {
     // Update
     a += 0.2;
     world.bodies[0]->pos.y() = (std::sin(a) / 4.0) + 0.25;
+
+    camera.update();
     
     // Draw
 
@@ -143,8 +144,6 @@ int main() {
     }
 
     SDL_UnlockSurface(screen_surface);
-
-    //Update the surface
     SDL_UpdateWindowSurface(window);
   }
 

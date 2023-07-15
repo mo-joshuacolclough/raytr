@@ -1,4 +1,5 @@
 #include <cmath>
+#include <iostream>
 
 #include "camera.h"
 
@@ -8,7 +9,9 @@ constexpr float CAMERA_DA = M_PI/8.0;
 
 Camera::Camera() :
   angle_(0.0f),
-  origin_(0.0f, 0.0f, 0.0f)
+  origin_(0.0f, 0.0f, 0.0f),
+  keydown_{ {SDLK_w, false}, {SDLK_s, false}, {SDLK_a, false}, {SDLK_d, false},
+            {SDLK_LSHIFT, false}, {SDLK_SPACE, false} }
 {
   ray_directions_ = new Vec3[SCREEN_HEIGHT * SCREEN_WIDTH];
 }
@@ -39,6 +42,46 @@ void Camera::calculate_ray_directions() {
   }
 }
 
+void Camera::update() {
+  for (auto& [key, is_down] : keydown_) {
+    if (!is_down) continue;
+
+    switch (key) {
+      case SDLK_w:
+        move_forward();
+        break;
+      case SDLK_s:
+        move_back();
+        break;
+      case SDLK_a:
+        strafe_left();
+        break;
+      case SDLK_d:
+        strafe_right();
+        break;
+      case SDLK_SPACE:
+        move_up();
+        break;
+      case SDLK_LSHIFT:
+        move_down();
+        break;
+      default:
+        std::cout << "KEYCODE: " << key << std::endl;
+        break;
+    }
+  }
+}
+
+void Camera::handle_event(const SDL_Event& event) {
+  if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
+    SDL_Keycode keycode = event.key.keysym.sym;
+    // First check the keycode is in the map
+    if (keydown_.find(keycode) != keydown_.end()) {
+      keydown_[keycode] = event.type == SDL_KEYDOWN;
+    }
+  }
+}
+
 // Camera movement
 void Camera::rotate_left() {
   angle_ += CAMERA_DA;
@@ -49,38 +92,38 @@ void Camera::rotate_right() {
   calculate_ray_directions();
 }
 void Camera::move_forward() {
-  Vec3 dx = Vec3(0, 0, -0.25);
+  Vec3 dx = Vec3(0, 0, -0.05);
   dx.rotate_y(angle_);
   origin_ += dx;
 
   calculate_ray_directions();
 }
 void Camera::move_back() {
-  Vec3 dx = Vec3(0, 0, 0.25);
+  Vec3 dx = Vec3(0, 0, 0.05);
   dx.rotate_y(angle_);
   origin_ += dx;
   calculate_ray_directions();
 }
 void Camera::strafe_left() {
-  Vec3 dx = Vec3(-0.25, 0, 0);
+  Vec3 dx = Vec3(-0.05, 0, 0);
   dx.rotate_y(angle_);
   origin_ += dx;
   calculate_ray_directions();
 }
 void Camera::strafe_right() {
-  Vec3 dx = Vec3(0.25, 0, 0);
+  Vec3 dx = Vec3(0.05, 0, 0);
   dx.rotate_y(angle_);
   origin_ += dx;
   calculate_ray_directions();
 }
 void Camera::move_up() {
-  Vec3 dx = Vec3(0, 0.25, 0);
+  Vec3 dx = Vec3(0, 0.05, 0);
   dx.rotate_y(angle_);
   origin_ += dx;
   calculate_ray_directions();
 }
 void Camera::move_down() {
-  Vec3 dx = Vec3(0, -0.25, 0);
+  Vec3 dx = Vec3(0, -0.05, 0);
   dx.rotate_y(angle_);
   origin_ += dx;
   calculate_ray_directions();

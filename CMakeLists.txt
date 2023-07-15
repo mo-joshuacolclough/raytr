@@ -7,7 +7,7 @@ find_package(OpenMP REQUIRED)
 find_package(SDL2 REQUIRED)
 include_directories(raytr ${SDL2_INCLUDE_DIRS})
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(SOURCES
