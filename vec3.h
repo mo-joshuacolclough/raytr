@@ -22,6 +22,8 @@ class Vec3 {
   Vec3& operator/=(float s);
   float length() const;
   float length_squared() const;
+
+  void rotate_y(float a);
 };
 
 Vec3 operator+(const Vec3& u, const Vec3& v);

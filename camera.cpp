@@ -3,19 +3,6 @@
 
 constexpr float CAMERA_DA = PI/8.0;
 
-
-namespace {
-
-Vec3 rotate_y(Vec3 in, float a) {
-  Vec3 out;
-  out[0] = in[0] * cos(a) + in[2] * sin(a);
-  out[1] = in[1];
-  out[2] = in[2] * cos(a) - in[0] * sin(a);
-  return out;
-}
-
-}  // namespace
-
 // -----------------------------------
 
 Camera::Camera() :
@@ -51,7 +38,7 @@ void Camera::calculate_ray_directions() {
       v = static_cast<float>(j)/(RAYY-1);
       p_idx = j * RAYX + i;
       ray_directions_[p_idx] = lower_left_corner + u * horizontal + v * vertical - origin_;
-      ray_directions_[p_idx] = rotate_y(ray_directions_[p_idx], angle_);
+      ray_directions_[p_idx].rotate_y(angle_);
     }
   }
   LOG_TR("done.");
@@ -75,7 +62,11 @@ void Camera::rotate_right() {
 void Camera::move_forward() {
   LOG_TR("starting...");
   LOG_DEBUG("Camera moving forward.");
-  origin_ += rotate_y(Vec3(0, 0, -0.25), angle_);
+
+  Vec3 dx = Vec3(0, 0, -0.25);
+  dx.rotate_y(angle_);
+  origin_ += dx;
+
   LOG_DEBUG("New origin: (%.2f, %.2f, %.2f)", origin_.x(), origin_.y(), origin_.z());
   calculate_ray_directions();
   LOG_TR("done.");
@@ -83,35 +74,45 @@ void Camera::move_forward() {
 void Camera::move_back() {
   LOG_TR("starting...");
   LOG_DEBUG("Camera moving backward.");
-  origin_ += rotate_y(Vec3(0, 0, 0.25), angle_);
+  Vec3 dx = Vec3(0, 0, 0.25);
+  dx.rotate_y(angle_);
+  origin_ += dx;
   calculate_ray_directions();
   LOG_TR("done.");
 }
 void Camera::strafe_left() {
   LOG_TR("starting...");
   LOG_DEBUG("Camera strafing left.");
-  origin_ += rotate_y(Vec3(-0.25, 0, 0.0), angle_);
+  Vec3 dx = Vec3(-0.25, 0, 0);
+  dx.rotate_y(angle_);
+  origin_ += dx;
   calculate_ray_directions();
   LOG_TR("done.");
 }
 void Camera::strafe_right() {
   LOG_TR("starting...");
   LOG_DEBUG("Camera strafing right.");
-  origin_ += rotate_y(Vec3(0.25, 0, 0.0), angle_);
+  Vec3 dx = Vec3(0.25, 0, 0);
+  dx.rotate_y(angle_);
+  origin_ += dx;
   calculate_ray_directions();
   LOG_TR("done.");
 }
 void Camera::move_up() {
   LOG_TR("starting...");
   LOG_DEBUG("Camera moving up.");
-  origin_ += rotate_y(Vec3(0.0, 0.25, 0.0), angle_);
+  Vec3 dx = Vec3(0, 0.25, 0);
+  dx.rotate_y(angle_);
+  origin_ += dx;
   calculate_ray_directions();
   LOG_TR("done.");
 }
 void Camera::move_down() {
   LOG_TR("starting...");
   LOG_DEBUG("Camera moving down.");
-  origin_ += rotate_y(Vec3(0.0, -0.25, 0.0), angle_);
+  Vec3 dx = Vec3(0, -0.25, 0);
+  dx.rotate_y(angle_);
+  origin_ += dx;
   calculate_ray_directions();
   LOG_TR("done.");
 }

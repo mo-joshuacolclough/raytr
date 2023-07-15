@@ -36,6 +36,7 @@ Color ray_color(Ray r, const World& world, Color last_col, unsigned int depth) {
   for (const std::shared_ptr<Body>& b : world.bodies) {
     float dist = b->hit(r);
 
+    // If it is the closest object
     if (dist > 0.0 && (t < 0.0 || t > dist)) {
       hitobj = b;
       t = dist;
@@ -65,7 +66,7 @@ Color ray_color(Ray r, const World& world, Color last_col, unsigned int depth) {
 
       // dot product with normal = lighting
       float d = dot(dir_unit, hitnorm);
-      d = d < 0.0 ? 0.0 : d;
+      d *= d > 0.0;  // max(0.0, d)
       final_col[0] *= l.col[0] * d;
       final_col[1] *= l.col[1] * d;
       final_col[2] *= l.col[2] * d;
@@ -90,9 +91,6 @@ Color ray_color(Ray r, const World& world, Color last_col, unsigned int depth) {
 char usb_text_buf[1024];
 
 int main() {
-  __printf_enable_fp();
-  __printf_enable_fixed();
-
   usb_interface_t const *interfaces[] = { &usb_ff_bulk, NULL };
   if (!usb_open(interfaces, GINT_CALL_NULL)) {
     usb_open_wait();
@@ -132,26 +130,19 @@ int main() {
     world.bodies[0]->pos.y() = (sin(a) / 4.0) + 0.25;
 
     // Draw
-    uint16_t p_idx;
+    uint16_t p_idx, ray_idx;
+    
     color_t pixel_color_t;
     for (uint16_t j = 0; j < RAYY; ++j) {
       for (uint16_t i = 0; i < RAYX; ++i) {
-        p_idx = (RAYY - j - 1) * RAYX + i;
-        pixel_color = ray_color(camera.make_ray(p_idx), world, Color(1.0, 1.0, 1.0), 0);
-        pixel_color_t = get_color_t(pixel_color);
+        ray_idx = (RAYY - j - 1) * RAYX + i;
 
-        // Fill in square
-        for (uint16_t ii = 0; ii < DEFINITION; ++ii) {
-          for (uint16_t jj = 0; jj < DEFINITION; ++jj) {
-            /* DEBUG SEGMENTS
-            float b = static_cast<float>(ii + jj) / (DEFINITION * 2.0);
-            b *= static_cast<float>(i + j)/(RAYX + RAYY);
-            Color pix_col(b,b,b);
-            */
-            pixel_color_t = get_color_t(pixel_color);
-            dpixel(i * DEFINITION + ii, j * DEFINITION + jj, pixel_color_t);
-          }
-        }
+        pixel_color_t = get_color_t(ray_color(camera.make_ray(ray_idx), world, Color(1.0, 1.0, 1.0), 0));
+        
+        // TEST SCREEN:
+        //pixel_color_t = get_color_t(Color(a, a*a, a*a*a));
+
+        drect(i * DEFINITION, j * DEFINITION, (i+1) * DEFINITION, (j+1) * DEFINITION, pixel_color_t);
       }
     }
     dupdate();

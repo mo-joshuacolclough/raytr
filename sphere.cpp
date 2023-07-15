@@ -2,6 +2,8 @@
 #include "body.h"
 #include "vec3.h"
 #include "ray.h"
+#include "mathutil.h"
+
 #include <cmath>
 
 Sphere::Sphere(unsigned int id_, float reflectivity_,
@@ -26,11 +28,6 @@ float Sphere::hit(const Ray& ray) const {
   } else {
     return (-b - std::sqrt(discriminant))/(2.0 * a);
   }
-
-  /*
-    bool not_hit = discriminant < 0;
-    return (not_hit * -1.0) + ((!not_hit) * (-b - std::sqrt(discriminant))/(2.0 * a));
-    */
 }
 
 Vec3 Sphere::normal_at(const Point3& other_pos) const {
