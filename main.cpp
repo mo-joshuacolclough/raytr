@@ -3,6 +3,9 @@
 #include <memory>
 #include <vector>
 #include <fstream>
+
+#include <SDL2/SDL.h>
+
 #include "vec3.h"
 #include "color.h"
 #include "ray.h"
@@ -75,6 +78,8 @@ Color ray_color(const Ray& r, const World& world, Color last_col, unsigned int d
   return last_col * ((1.0 - t) * Color(1.0, 1.0, 1.0) + t * Color(0.4, 0.7, 1.0));
 }
 
+namespace {
+
 Vec3 rotate_y(Vec3 in, float a) {
   Vec3 out;
   out[0] = in[0] * cos(a) + in[2] * sin(a);
@@ -83,20 +88,35 @@ Vec3 rotate_y(Vec3 in, float a) {
   return out;
 }
 
+inline Uint32 to_pixel(SDL_Surface* surface, Color color) {
+  return SDL_MapRGBA(surface->format,
+                     static_cast<uint8_t>(color[0] * 255),
+                     static_cast<uint8_t>(color[1] * 255),
+                     static_cast<uint8_t>(color[2] * 255),
+                     255);
+}
+
+}  // namespace
+
+
 int main() {
   // Following https://raytracing.github.io/books/RayTracingInOneWeekend.html
+  
+  constexpr float aspect_ratio = 16.0/9.0;
+  //    const float aspect_ratio = 1.0;
+  constexpr int image_width = 1920 / 2;
+  constexpr int image_height = static_cast<int>(image_width/aspect_ratio);
+
+  SDL_Window* window = nullptr;
+  SDL_Surface* screen_surface = nullptr;
+  SDL_Init(SDL_INIT_VIDEO);
+
+  window = SDL_CreateWindow("Raytr", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, image_width, image_height, SDL_WINDOW_SHOWN );
+
+  screen_surface = SDL_GetWindowSurface(window);
 
   // Scene
   World world = World();
-
-  // Image
-  // open file
-  std::ofstream imgfile("../output.ppm");
-
-  const float aspect_ratio = 16.0/9.0;
-  //    const float aspect_ratio = 1.0;
-  const int image_width = 1280;
-  const int image_height = static_cast<int>(image_width/aspect_ratio);
 
   // Camera (maths from https://raytracing.github.io/books/RayTracingInOneWeekend.html)
   float viewport_height = 2.0;
@@ -112,27 +132,50 @@ int main() {
 
   Vec3 lower_left_corner = origin - horizontal/2 - vertical/2 - Vec3(0, 0, focal_length);
 
-  // Render
-  imgfile << "P3\n" << image_width << ' ' << image_height << "\n255\n";
+  bool quit = false;
+  float a = 0.0;
 
-  for (int j = image_height-1; j >= 0; --j) {
-    std::cout << "\rScanlines remaining: " << j << ' ' << std::flush;
-    for (int i = 0; i < image_width; ++i) {
-      float u = static_cast<float>(i)/(image_width-1);
-      float v = static_cast<float>(j)/(image_height-1);
-      Vec3 ray_direction = lower_left_corner + u * horizontal + v * vertical - origin;
-      ray_direction = rotate_y(ray_direction, camera_y_angle);
+  //Event handler
+  SDL_Event e;
 
-      Ray r = Ray(origin, ray_direction);
-      Color pixel_col = ray_color(r, world, Color(1.0, 1.0, 1.0), 0);
-
-      write_color(imgfile, pixel_col);
+  while(!quit) {
+    while(SDL_PollEvent(&e) != 0) {
+      if (e.type == SDL_QUIT) {
+        quit = true;
+      }
     }
+
+    // Update
+    a += 0.2;
+    world.bodies[0]->pos.y() = (std::sin(a) / 4.0) + 0.25;
+    
+    // Draw
+
+    // Lock screen image
+    SDL_LockSurface(screen_surface);
+    Uint32 *buffer = (Uint32*)screen_surface->pixels;
+
+    #pragma omp parallel for
+    for (int j = 0; j < image_height; ++j) {
+      for (int i = 0; i < image_width; ++i) {
+        float u = static_cast<float>(i)/(image_width-1);
+        float v = static_cast<float>(j)/(image_height-1);
+        Vec3 ray_direction = lower_left_corner + u * horizontal + v * vertical - origin;
+        ray_direction = rotate_y(ray_direction, camera_y_angle);
+
+        buffer[(image_height - j - 1) * image_width + i] = to_pixel(screen_surface, ray_color(Ray(origin, ray_direction), world, Color(1.0, 1.0, 1.0), 0));
+      }
+    }
+    SDL_UnlockSurface(screen_surface);
+
+    //Update the surface
+    SDL_UpdateWindowSurface(window);
   }
 
-  std::cout << std::endl;
-
-  imgfile.close();
+  // Close SDL
+  SDL_DestroyWindow(window);
+  SDL_Quit();
 
   return 0;
 }
+

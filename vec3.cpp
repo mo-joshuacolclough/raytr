@@ -4,10 +4,6 @@
 Vec3::Vec3(): e{0.0, 0.0, 0.0} {}
 Vec3::Vec3(float x, float y, float z): e{x, y, z} {};
 
-float Vec3::x() const { return e[0]; }
-float Vec3::y() const { return e[1]; }
-float Vec3::z() const { return e[2]; }
-
 float Vec3::operator[](int i) const { return e[i]; }
 float& Vec3::operator[](int i) { return e[i]; }
 
@@ -49,7 +45,14 @@ Vec3& Vec3::operator/=(float s) {
 float Vec3::length_squared() const { return e[0]*e[0] + e[1]*e[1] + e[2]*e[2]; }
 float Vec3::length() const { return std::sqrt(length_squared()); }
 
-std::ostream& operator<<(std::ostream& out, const Vec3& v) { return out << v[0] << ' ' << v[1] << ' ' << v[2]; }
+
+void Vec3::rotate_y(float a) {
+  float tmp0(e[0]);
+  const float sina = std::sin(a);
+  const float cosa = std::cos(a);
+  e[0] = e[0] * cosa + e[2] * sina;
+  e[2] = e[2] * cosa - tmp0 * sina;
+}
 
 float dot(const Vec3&u, const Vec3& v) { return u[0] * v[0] + u[1] * v[1] + u[2] * v[2]; }
 
@@ -61,6 +64,7 @@ Vec3 cross(const Vec3& u, const Vec3& v) {
 
 Vec3 unit_vector(Vec3 v) { return v / v.length(); }
 
+/*
 void rotate(Vec3& u, float angle) {
   float s = std::sin(angle);
   float c = std::cos(angle);
@@ -68,3 +72,4 @@ void rotate(Vec3& u, float angle) {
   u[0] = u[0] * c - u[1] * s;
   u[1] = tempx * s + u[1] * c;
 }
+*/
