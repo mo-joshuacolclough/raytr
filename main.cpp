@@ -124,44 +124,50 @@ int main() {
 
   //Event handler
   SDL_Event event;
+  
+  #pragma omp parallel
+  #pragma omp master
+  {
+    while(!quit) {
+      time_last = time_now;
+      time_now = Clock::now();
+      std::chrono::duration<float> dt_duration = time_now - time_last;
+      float dt = dt_duration.count();
+      std::cout << "FPS: " << 1.0/dt << std::endl;
 
-  while(!quit) {
-    time_last = time_now;
-    time_now = Clock::now();
-    std::chrono::duration<float> dt_duration = time_now - time_last;
-    float dt = dt_duration.count();
-    std::cout << "FPS: " << 1.0/dt << std::endl;
+      // Keyboard
+      while(SDL_PollEvent(&event) != 0) {
+        camera.handle_event(event);
 
-    // Keyboard
-    while(SDL_PollEvent(&event) != 0) {
-      camera.handle_event(event);
-
-      if (event.type == SDL_QUIT) {
-        quit = true;
+        if (event.type == SDL_QUIT) {
+          quit = true;
+        }
       }
+
+      // Update
+      a += 10.0 * dt;
+      world.bodies[0]->pos.y() = (std::sin(a) / 4.0) + 0.25;
+
+      camera.update(dt);
+      
+      // Draw
+
+      // Lock screen image
+      SDL_LockSurface(screen_surface);
+      Uint32* buffer = static_cast<Uint32*>(screen_surface->pixels);
+
+      #pragma omp taskloop num_tasks(DEF_SCREEN_WIDTH)
+      for (size_t idx = 0; idx < SCREEN_WIDTH * SCREEN_HEIGHT; ++idx) {
+        const Color ray_color_out = ray_color(camera.make_ray(idx), world, Color(1.0, 1.0, 1.0), 0);
+        buffer[idx] = to_pixel(screen_surface, ray_color_out);
+      }
+
+      #pragma omp taskwait
+      SDL_UnlockSurface(screen_surface);
+      SDL_UpdateWindowSurface(window);
     }
 
-    // Update
-    a += 10.0 * dt;
-    world.bodies[0]->pos.y() = (std::sin(a) / 4.0) + 0.25;
-
-    camera.update(dt);
-    
-    // Draw
-
-    // Lock screen image
-    SDL_LockSurface(screen_surface);
-    Uint32 *buffer = (Uint32*)screen_surface->pixels;
-
-    #pragma omp parallel for
-    for (size_t idx = 0; idx < SCREEN_WIDTH * SCREEN_HEIGHT; ++idx) {
-      const Color ray_color_out = ray_color(camera.make_ray(idx), world, Color(1.0, 1.0, 1.0), 0);
-      buffer[idx] = to_pixel(screen_surface, ray_color_out);
-    }
-
-    SDL_UnlockSurface(screen_surface);
-    SDL_UpdateWindowSurface(window);
-  }
+  }  // omp
 
   // Close SDL
   SDL_DestroyWindow(window);
