@@ -42,33 +42,39 @@ void Camera::calculate_ray_directions() {
   }
 }
 
-void Camera::update() {
+void Camera::update(const float dt) {
+  bool need_to_recalc_ray_dirs = false;
   for (auto& [key, is_down] : keydown_) {
     if (!is_down) continue;
 
     switch (key) {
       case SDLK_w:
-        move_forward();
+        move_forward(dt);
         break;
       case SDLK_s:
-        move_back();
+        move_back(dt);
         break;
       case SDLK_a:
-        strafe_left();
+        strafe_left(dt);
         break;
       case SDLK_d:
-        strafe_right();
+        strafe_right(dt);
         break;
       case SDLK_SPACE:
-        move_up();
+        move_up(dt);
         break;
       case SDLK_LSHIFT:
-        move_down();
+        move_down(dt);
         break;
       default:
         std::cout << "KEYCODE: " << key << std::endl;
         break;
     }
+    need_to_recalc_ray_dirs = true;
+  }
+
+  if (need_to_recalc_ray_dirs) {
+    calculate_ray_directions();
   }
 }
 
@@ -83,49 +89,40 @@ void Camera::handle_event(const SDL_Event& event) {
 }
 
 // Camera movement
-void Camera::rotate_left() {
-  angle_ += CAMERA_DA;
-  calculate_ray_directions();
+void Camera::rotate_left(const float dt) {
+  angle_ += CAMERA_DA * dt;
 }
-void Camera::rotate_right() {
-  angle_ -= CAMERA_DA;
-  calculate_ray_directions();
+void Camera::rotate_right(const float dt) {
+  angle_ -= CAMERA_DA * dt;
 }
-void Camera::move_forward() {
-  Vec3 dx = Vec3(0, 0, -0.05);
+void Camera::move_forward(const float dt) {
+  Vec3 dx = Vec3(0, 0, -CAMERA_MOVE_SPEED * dt);
   dx.rotate_y(angle_);
   origin_ += dx;
-
-  calculate_ray_directions();
 }
-void Camera::move_back() {
-  Vec3 dx = Vec3(0, 0, 0.05);
+void Camera::move_back(const float dt) {
+  Vec3 dx = Vec3(0, 0, CAMERA_MOVE_SPEED * dt);
   dx.rotate_y(angle_);
   origin_ += dx;
-  calculate_ray_directions();
 }
-void Camera::strafe_left() {
-  Vec3 dx = Vec3(-0.05, 0, 0);
+void Camera::strafe_left(const float dt) {
+  Vec3 dx = Vec3(-CAMERA_MOVE_SPEED * dt, 0, 0);
   dx.rotate_y(angle_);
   origin_ += dx;
-  calculate_ray_directions();
 }
-void Camera::strafe_right() {
-  Vec3 dx = Vec3(0.05, 0, 0);
+void Camera::strafe_right(const float dt) {
+  Vec3 dx = Vec3(CAMERA_MOVE_SPEED * dt, 0, 0);
   dx.rotate_y(angle_);
   origin_ += dx;
-  calculate_ray_directions();
 }
-void Camera::move_up() {
-  Vec3 dx = Vec3(0, 0.05, 0);
+void Camera::move_up(const float dt) {
+  Vec3 dx = Vec3(0, CAMERA_MOVE_SPEED * dt, 0);
   dx.rotate_y(angle_);
   origin_ += dx;
-  calculate_ray_directions();
 }
-void Camera::move_down() {
-  Vec3 dx = Vec3(0, -0.05, 0);
+void Camera::move_down(const float dt) {
+  Vec3 dx = Vec3(0, -CAMERA_MOVE_SPEED * dt, 0);
   dx.rotate_y(angle_);
   origin_ += dx;
-  calculate_ray_directions();
 }
 

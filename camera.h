@@ -15,25 +15,25 @@ class Camera {
   ~Camera();
   Camera(const Camera&) = delete;
 
-  void update();
+  void update(const float dt);
 
   void calculate_ray_directions();
   Ray make_ray(size_t p_idx) const;
-
-  // Movement
-  void rotate_left();
-  void rotate_right();
-  void move_forward();
-  void move_back();
-  void strafe_left();
-  void strafe_right();
-  void move_up();
-  void move_down();
 
   // SDL
   void handle_event(const SDL_Event& event);
 
  private:
+  // Movement
+  void rotate_left(const float dt);
+  void rotate_right(const float dt);
+  void move_forward(const float dt);
+  void move_back(const float dt);
+  void strafe_left(const float dt);
+  void strafe_right(const float dt);
+  void move_up(const float dt);
+  void move_down(const float dt);
+
   // void handle_mouse_motion_event() {}  // TODO
 
 
