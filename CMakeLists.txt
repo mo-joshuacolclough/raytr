@@ -7,11 +7,13 @@ project(raytr)
 include(GenerateG1A)
 include(GenerateG3A)
 include(Fxconv)
-find_package(Gint 2.9 REQUIRED)
-find_package(LibProf 2.1 REQUIRED)
+find_package(Gint REQUIRED)
+find_package(LibProf REQUIRED)
 
 set(SOURCES
     main.cpp
+    common.h
+    log.h log.cpp
     vec3.h vec3.cpp
     ray.h ray.cpp
     color.h color.cpp
@@ -24,6 +26,7 @@ set(SOURCES
 #    aacube.h aacube.cpp
     plane.h plane.cpp
 #    equation.h equation.cpp
+    camera.h camera.cpp
 
 
   # ...
@@ -43,15 +46,16 @@ set(ASSETS_cg
 
 fxconv_declare_assets(${ASSETS} ${ASSETS_fx} ${ASSETS_cg} WITH_METADATA)
 
-add_executable(myaddin ${SOURCES} ${ASSETS} ${ASSETS_${FXSDK_PLATFORM}})
-target_compile_options(myaddin PRIVATE -Wall -Wextra -Os -std=c++20)
-target_link_libraries(myaddin Gint::Gint LibProf::LibProf -lstdc++)
+add_executable(raytr ${SOURCES} ${ASSETS} ${ASSETS_${FXSDK_PLATFORM}})
+
+target_compile_options(raytr PRIVATE -Wall -Wextra -Os -std=c++20)
+target_link_libraries(raytr Gint::Gint LibProf::LibProf -lstdc++)
 add_link_options(-Wl --no-undefined)
 
 if("${FXSDK_PLATFORM_LONG}" STREQUAL fx9860G)
-  generate_g1a(TARGET myaddin OUTPUT "raytr.g1a"
+  generate_g1a(TARGET raytr OUTPUT "raytr.g1a"
     NAME "raytr" ICON assets-fx/icon.png)
 elseif("${FXSDK_PLATFORM_LONG}" STREQUAL fxCG50)
-  generate_g3a(TARGET myaddin OUTPUT "raytr.g3a"
+  generate_g3a(TARGET raytr OUTPUT "raytr.g3a"
     NAME "raytr" ICONS assets-cg/icon-uns.png assets-cg/icon-sel.png)
 endif()

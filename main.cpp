@@ -1,7 +1,21 @@
 #include <cmath>
 #include <memory>
-#include <vector>
+
+#include <gint/clock.h>
+#include <gint/display.h>
+#include <gint/keycodes.h>
+#include <gint/keyboard.h>
+#include <gint/usb.h>
+#include <gint/usb-ff-bulk.h>
+
+#include <fxlibc/printf.h>
+#include <stdio.h>
+#include <cstring>
+
+#include "common.h"
+#include "log.h"
 #include "vec3.h"
+#include "camera.h"
 #include "color.h"
 #include "ray.h"
 #include "body.h"
@@ -11,13 +25,9 @@
 #include "world.h"
 #include "plane.h"
 
-#include <gint/clock.h>
-#include <gint/display.h>
-#include <gint/keycodes.h>
-#include <gint/keyboard.h>
+// Following https://raytracing.github.io/books/RayTracingInOneWeekend.html
 
-#define MAX_REFLECT 1
-#define PI 3.141592653589793238462643f
+namespace {
 
 Color ray_color(Ray r, const World& world, Color last_col, unsigned int depth) {
   float t = -1.0; // position along ray of closest hit
@@ -75,138 +85,106 @@ Color ray_color(Ray r, const World& world, Color last_col, unsigned int depth) {
   return last_col * ((1.0 - t) * Color(1.0, 1.0, 1.0) + t * Color(0.4, 0.7, 1.0));
 }
 
-Vec3 rotate_y(Vec3 in, float a) {
-  Vec3 out;
-  out[0] = in[0] * cos(a) + in[2] * sin(a);
-  out[1] = in[1];
-  out[2] = in[2] * cos(a) - in[0] * sin(a);
-  return out;
-}
+}  // namespace
+
+char usb_text_buf[1024];
 
 int main() {
-  // Following https://raytracing.github.io/books/RayTracingInOneWeekend.html
+  __printf_enable_fp();
+  __printf_enable_fixed();
+
+  usb_interface_t const *interfaces[] = { &usb_ff_bulk, NULL };
+  if (!usb_open(interfaces, GINT_CALL_NULL)) {
+    usb_open_wait();
+  }
+
+  LOG("Starting...");
+  LOG("Display size: %dx%d", DWIDTH, DHEIGHT);
+  LOG("Resolution size: %dx%d", RAYX, RAYY);
+  LOG("Total Vec3 bytes: %d", sizeof(Vec3) * RAYX * RAYY);
 
   // Scene
   World world = World();
 
-  const int START_RECT_SIZE = 32;
-  const int MIN_RECT_SIZE = 2;
-  const int RECT_INCREMENT = 2;
-
-  //    const float aspect_ratio = 1.0;
-  int rectangle_size = START_RECT_SIZE;
-  int image_width = DWIDTH / rectangle_size;
-  int image_height = DHEIGHT / rectangle_size;
-
-  const float aspect_ratio = static_cast<float>(image_width)/static_cast<float>(image_height);
-
-  // Camera (maths from https://raytracing.github.io/books/RayTracingInOneWeekend.html)
-  float viewport_height = 2.0;
-  float viewport_width = aspect_ratio * viewport_height;
-  float focal_length = 1.0;
-
-  Point3 origin = Point3(0, 0, 0);
-  const float da = PI/8.0;
-  float camera_y_angle = 0.0;
-  // float camera_x_angle = 0.0;
-
-  Vec3 horizontal = Vec3(viewport_width, 0, 0);
-  Vec3 vertical = Vec3(0, viewport_height, 0);
-
-  Vec3 lower_left_corner = origin - horizontal/2 - vertical/2 - Vec3(0, 0, focal_length);
-
-  // Render
+  LOG("Setting up camera...");
+  // Setup Camera
+  Camera camera;
+  camera.calculate_ray_directions();
+  LOG("Camera setup done.");
+  
   bool stop = false;
-  int corrected_j;
-  float u, v;
-  Vec3 ray_direction;
-  Color pixel_col;
   bool keyboard_pressed = false;
 
-  auto set_res = [&](int rect_size) {
-    rectangle_size = rect_size;
-    image_width = DWIDTH / rectangle_size;
-    image_height = DHEIGHT / rectangle_size;
-  };
-
   // OVERCLOCK
+#ifdef OVERCLOCK
   clock_set_speed(CLOCK_SPEED_F4);
+#endif
 
   float a = 0.0;
+  Color pixel_color;
 
   while (!stop) {
-    if (keyboard_pressed) {
-      // set_res(START_RECT_SIZE);
-      keyboard_pressed = false;
-    }
-
     // Update
+    if (keyboard_pressed)
+      keyboard_pressed = false;
+
     a += 0.5;
     world.bodies[0]->pos.y() = (sin(a) / 4.0) + 0.25;
-    
+
     // Draw
-    lower_left_corner = origin - horizontal/2 - vertical/2 - Vec3(0, 0, focal_length);
+    uint16_t p_idx;
+    color_t pixel_color_t;
+    for (uint16_t j = 0; j < RAYY; ++j) {
+      for (uint16_t i = 0; i < RAYX; ++i) {
+        p_idx = j * RAYY + i;
+        pixel_color = ray_color(camera.make_ray(p_idx), world, Color(1.0, 1.0, 1.0), 0);
+        pixel_color_t = get_color_t(pixel_color);
 
-    for (int j = image_height-1; j >= 0; --j) {
-      for (int i = 0; i < image_width; ++i) {
-        u = static_cast<float>(i)/(image_width-1);
-        v = static_cast<float>(j)/(image_height-1);
-        ray_direction = lower_left_corner + u * horizontal + v * vertical - origin;
-        ray_direction = rotate_y(ray_direction, camera_y_angle);
-
-        pixel_col = ray_color(Ray(origin, ray_direction), world, Color(1.0, 1.0, 1.0), 0);
-
-        const auto col = get_color_t(pixel_col);
-        corrected_j = image_height - j;
-
-        drect(i* rectangle_size, (corrected_j - 1) * rectangle_size,
-              (i + 1) * rectangle_size, (corrected_j) * rectangle_size,
-              col);
+        // Fill in square
+        for (uint16_t ii = 0; ii < DEFINITION; ++ii) {
+          for (uint16_t jj = 0; jj < DEFINITION; ++jj) {
+            dpixel(i + ii, DHEIGHT - (j + jj), pixel_color_t);
+          }
+        }
       }
     }
-
     dupdate();
 
+    // Keyboard events
     key_event_t key_press = pollevent();
     if (key_press.type != KEYEV_NONE &&
         (key_press.type == KEYEV_DOWN ||
          key_press.type == KEYEV_HOLD)) {
       switch (key_press.key) {
         case KEY_LEFT:
-          camera_y_angle += da;
+          camera.rotate_left();
           break;
         case KEY_RIGHT:
-          camera_y_angle -= da;
+          camera.rotate_right();
           break;
         // -- Forward, back --
         case KEY_8:
-          origin += rotate_y(Vec3(0, 0, -0.25), camera_y_angle);
+          camera.move_forward();
           break;
         case KEY_5:
-          origin += rotate_y(Vec3(0, 0, 0.25), camera_y_angle);
+          camera.move_back();
           break;
         // -- Left, right --
         case KEY_4:
-          origin += rotate_y(Vec3(-0.25, 0, 0.0), camera_y_angle);
+          camera.strafe_left();
           break;
         case KEY_6:
-          origin += rotate_y(Vec3(0.25, 0, 0.0), camera_y_angle);
+          camera.strafe_right();
           break;
         // -- Up, down --
         case KEY_9:
-          origin += rotate_y(Vec3(0.0, 0.25, 0.0), camera_y_angle);
+          camera.move_up();
           break;
         case KEY_7:
-          origin += rotate_y(Vec3(0.0, -0.25, 0.0), camera_y_angle);
-          break;
-        // -- Resolution --
-        case KEY_COMMA:
-          set_res(rectangle_size + RECT_INCREMENT);
-          break;
-        case KEY_ARROW:
-          set_res(std::max(rectangle_size - RECT_INCREMENT, MIN_RECT_SIZE));
+          camera.move_down();
           break;
         case KEY_EXIT:
+          LOG("Exiting.");
           stop = true;
           break;
       }
@@ -216,5 +194,6 @@ int main() {
     }
   }
 
+  usb_close();
   return 0;
 }
