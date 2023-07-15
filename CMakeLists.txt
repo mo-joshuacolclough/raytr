@@ -14,7 +14,6 @@ set(SOURCES
     main.cpp
     common.h
     log.h log.cpp
-    mathutil.h mathutil.cpp
     vec3.h vec3.cpp
     ray.h ray.cpp
     color.h color.cpp

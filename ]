@@ -1,8 +1,0 @@
-#pragma once
-
-namespace mathutil {
-
-// funny quake iii algorithm
-constexpr float Q_rsqrt(float number) noexcept;
-
-}

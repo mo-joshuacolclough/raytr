@@ -2,7 +2,6 @@
 #include "body.h"
 #include "vec3.h"
 #include "ray.h"
-#include "mathutil.h"
 
 #include <cmath>
 
