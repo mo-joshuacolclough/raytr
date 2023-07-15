@@ -56,6 +56,7 @@ Color ray_color(Ray r, const World& world, Color last_col, unsigned int depth) {
       Vec3 dir_unit = l.pos - hitpos;
       dir_unit = unit_vector(dir_unit);
 
+#ifdef SHADOWS
       Ray shadowray = Ray(hitpos, dir_unit);
       for (const std::shared_ptr<Body>& b : world.bodies) {
         if (b->id != hitobj->id) {
@@ -63,6 +64,7 @@ Color ray_color(Ray r, const World& world, Color last_col, unsigned int depth) {
           if (d > 0.0) return Color(0.0, 0.0, 0.0);
         }
       }
+#endif  // SHADOWS
 
       // dot product with normal = lighting
       float d = dot(dir_unit, hitnorm);
@@ -72,11 +74,13 @@ Color ray_color(Ray r, const World& world, Color last_col, unsigned int depth) {
       final_col[2] *= l.col[2] * d;
     }
 
+#ifdef REFLECTIONS
     // Reflect and call again
     if (depth < MAX_REFLECT && hitobj->reflectivity != 0.0) {
       r.reflect(hitnorm, hitpos, hitobj->reflectivity);
       final_col = ray_color(r, world, final_col, depth+1);
     }
+#endif  // REFLECTIONS
 
     // Vec3 n = unit_vector(r.at(t) - hitobj->pos);
     return final_col * r.getBrightness();
@@ -88,13 +92,15 @@ Color ray_color(Ray r, const World& world, Color last_col, unsigned int depth) {
 
 }  // namespace
 
-char usb_text_buf[1024];
+char usb_text_buf[128];
 
 int main() {
+#ifdef USB_LOGGING
   usb_interface_t const *interfaces[] = { &usb_ff_bulk, NULL };
   if (!usb_open(interfaces, GINT_CALL_NULL)) {
     usb_open_wait();
   }
+#endif
 
   LOG("Starting...");
   LOG("Display size: %dx%d", DWIDTH, DHEIGHT);
@@ -191,6 +197,9 @@ int main() {
     }
   }
 
+#ifdef USB_LOGGING
   usb_close();
+#endif
+
   return 0;
 }
