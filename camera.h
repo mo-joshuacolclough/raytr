@@ -29,14 +29,14 @@ class Camera {
   void move_down();
 
  private:
-  // Current directions of each ray. origin + direction = ray vector
-  Vec3* ray_directions_;
-
   static constexpr float viewport_height_ = 2.0;
   static constexpr float viewport_width_ = viewport_height_ * static_cast<float>(DWIDTH)/static_cast<float>(DHEIGHT);
   static constexpr float focal_length_ = 1.0;
 
   float angle_;
   Vec3 origin_;
+
+  // Current directions of each ray. origin + direction = ray vector
+  Vec3* ray_directions_;
 };
 

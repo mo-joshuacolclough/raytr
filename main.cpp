@@ -136,14 +136,20 @@ int main() {
     color_t pixel_color_t;
     for (uint16_t j = 0; j < RAYY; ++j) {
       for (uint16_t i = 0; i < RAYX; ++i) {
-        p_idx = j * RAYY + i;
+        p_idx = (RAYY - j - 1) * RAYX + i;
         pixel_color = ray_color(camera.make_ray(p_idx), world, Color(1.0, 1.0, 1.0), 0);
         pixel_color_t = get_color_t(pixel_color);
 
         // Fill in square
         for (uint16_t ii = 0; ii < DEFINITION; ++ii) {
           for (uint16_t jj = 0; jj < DEFINITION; ++jj) {
-            dpixel(i + ii, DHEIGHT - (j + jj), pixel_color_t);
+            /* DEBUG SEGMENTS
+            float b = static_cast<float>(ii + jj) / (DEFINITION * 2.0);
+            b *= static_cast<float>(i + j)/(RAYX + RAYY);
+            Color pix_col(b,b,b);
+            */
+            pixel_color_t = get_color_t(pixel_color);
+            dpixel(i * DEFINITION + ii, j * DEFINITION + jj, pixel_color_t);
           }
         }
       }

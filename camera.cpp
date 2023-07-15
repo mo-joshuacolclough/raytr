@@ -28,7 +28,6 @@ Camera::Camera() :
 }
 
 Camera::~Camera() {
-  LOG_TR("destructed.");
   delete [] ray_directions_;
 }
 
@@ -46,11 +45,11 @@ void Camera::calculate_ray_directions() {
   
   float u, v;
   uint16_t p_idx;
-  for (uint16_t j = 0; j < RAYY; --j) {
+  for (uint16_t j = 0; j < RAYY; ++j) {
     for (uint16_t i = 0; i < RAYX; ++i) {
       u = static_cast<float>(i)/(RAYX-1);
-      v = static_cast<float>(RAYY - j - 1)/(RAYY-1);
-      p_idx = j * RAYY + i;
+      v = static_cast<float>(j)/(RAYY-1);
+      p_idx = j * RAYX + i;
       ray_directions_[p_idx] = lower_left_corner + u * horizontal + v * vertical - origin_;
       ray_directions_[p_idx] = rotate_y(ray_directions_[p_idx], angle_);
     }
@@ -77,6 +76,7 @@ void Camera::move_forward() {
   LOG_TR("starting...");
   LOG_DEBUG("Camera moving forward.");
   origin_ += rotate_y(Vec3(0, 0, -0.25), angle_);
+  LOG_DEBUG("New origin: (%.2f, %.2f, %.2f)", origin_.x(), origin_.y(), origin_.z());
   calculate_ray_directions();
   LOG_TR("done.");
 }
