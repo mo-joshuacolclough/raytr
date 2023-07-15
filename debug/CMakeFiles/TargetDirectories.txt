@@ -1,3 +1,0 @@
-/home/josh/programming/cpp/raytr/debug/CMakeFiles/raytr.dir
-/home/josh/programming/cpp/raytr/debug/CMakeFiles/edit_cache.dir
-/home/josh/programming/cpp/raytr/debug/CMakeFiles/rebuild_cache.dir
