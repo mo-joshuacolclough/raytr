@@ -6,6 +6,8 @@
 
 #include <SDL2/SDL.h>
 
+#include "common.h"
+#include "camera.h"
 #include "vec3.h"
 #include "color.h"
 #include "ray.h"
@@ -15,9 +17,6 @@
 #include "ground.h"
 #include "world.h"
 #include "plane.h"
-
-#define MAX_REFLECT 2
-
 
 Color ray_color(const Ray& r, const World& world, Color last_col, unsigned int depth) {
   float t = -1.0; // position along ray of closest hit
@@ -62,7 +61,7 @@ Color ray_color(const Ray& r, const World& world, Color last_col, unsigned int d
     }
 
     // Reflect and call again
-    if (depth < MAX_REFLECT && hitobj->reflectivity != 0.0) {
+    if (depth < MAX_REFLECTIONS && hitobj->reflectivity != 0.0) {
       Ray reflected = r.reflect(hitnorm, hitpos, hitobj->reflectivity);
       final_col = ray_color(reflected, world, final_col, depth+1);
     }
@@ -88,7 +87,7 @@ Vec3 rotate_y(Vec3 in, float a) {
   return out;
 }
 
-inline Uint32 to_pixel(SDL_Surface* surface, Color color) {
+inline Uint32 to_pixel(SDL_Surface* surface, const Color& color) {
   return SDL_MapRGBA(surface->format,
                      static_cast<uint8_t>(color[0] * 255),
                      static_cast<uint8_t>(color[1] * 255),
@@ -101,36 +100,18 @@ inline Uint32 to_pixel(SDL_Surface* surface, Color color) {
 
 int main() {
   // Following https://raytracing.github.io/books/RayTracingInOneWeekend.html
-  
-  constexpr float aspect_ratio = 16.0/9.0;
-  //    const float aspect_ratio = 1.0;
-  constexpr int image_width = 1920 / 2;
-  constexpr int image_height = static_cast<int>(image_width/aspect_ratio);
-
   SDL_Window* window = nullptr;
   SDL_Surface* screen_surface = nullptr;
   SDL_Init(SDL_INIT_VIDEO);
 
-  window = SDL_CreateWindow("Raytr", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, image_width, image_height, SDL_WINDOW_SHOWN );
+  window = SDL_CreateWindow("Raytr", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
 
   screen_surface = SDL_GetWindowSurface(window);
 
   // Scene
   World world = World();
-
-  // Camera (maths from https://raytracing.github.io/books/RayTracingInOneWeekend.html)
-  float viewport_height = 2.0;
-  float viewport_width = aspect_ratio * viewport_height;
-  float focal_length = 1.0;
-
-  Point3 origin = Point3(0, 0, 0);
-  float camera_y_angle = 0.2;
-  // float camera_x_angle = 0.0;
-
-  Vec3 horizontal = Vec3(viewport_width, 0, 0);
-  Vec3 vertical = Vec3(0, viewport_height, 0);
-
-  Vec3 lower_left_corner = origin - horizontal/2 - vertical/2 - Vec3(0, 0, focal_length);
+  Camera camera;
+  camera.calculate_ray_directions();
 
   bool quit = false;
   float a = 0.0;
@@ -156,16 +137,11 @@ int main() {
     Uint32 *buffer = (Uint32*)screen_surface->pixels;
 
     #pragma omp parallel for
-    for (int j = 0; j < image_height; ++j) {
-      for (int i = 0; i < image_width; ++i) {
-        float u = static_cast<float>(i)/(image_width-1);
-        float v = static_cast<float>(j)/(image_height-1);
-        Vec3 ray_direction = lower_left_corner + u * horizontal + v * vertical - origin;
-        ray_direction = rotate_y(ray_direction, camera_y_angle);
-
-        buffer[(image_height - j - 1) * image_width + i] = to_pixel(screen_surface, ray_color(Ray(origin, ray_direction), world, Color(1.0, 1.0, 1.0), 0));
-      }
+    for (size_t idx = 0; idx < SCREEN_WIDTH * SCREEN_HEIGHT; ++idx) {
+      const Color ray_color_out = ray_color(camera.make_ray(idx), world, Color(1.0, 1.0, 1.0), 0);
+      buffer[idx] = to_pixel(screen_surface, ray_color_out);
     }
+
     SDL_UnlockSurface(screen_surface);
 
     //Update the surface

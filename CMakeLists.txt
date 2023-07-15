@@ -12,6 +12,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(SOURCES
     main.cpp
+    common.h
+    camera.h camera.cpp
     vec3.h vec3.cpp
     ray.h ray.cpp
     color.h color.cpp
