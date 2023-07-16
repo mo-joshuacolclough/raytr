@@ -156,7 +156,7 @@ int main() {
       SDL_LockSurface(screen_surface);
       Uint32* buffer = static_cast<Uint32*>(screen_surface->pixels);
 
-      #pragma omp taskloop num_tasks(DEF_SCREEN_WIDTH)
+      #pragma omp taskloop grainsize(DEF_SCREEN_WIDTH)
       for (size_t idx = 0; idx < SCREEN_WIDTH * SCREEN_HEIGHT; ++idx) {
         const Color ray_color_out = ray_color(camera.make_ray(idx), world, Color(1.0, 1.0, 1.0), 0);
         buffer[idx] = to_pixel(screen_surface, ray_color_out);
