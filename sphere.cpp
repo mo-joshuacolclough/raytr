@@ -15,11 +15,11 @@ Sphere::Sphere(unsigned int id_, float reflectivity_,
 
 float Sphere::hit(const Ray& ray) const {
   // Maths again from https://raytracing.github.io/books/RayTracingInOneWeekend.html#thevec3class/ - 6.2
-  Vec3 oc = ray.origin() - pos;
-  float a = ray.direction().length_squared();
-  float b = 2.0 * dot(oc, ray.direction());
-  float c = oc.length_squared() - r*r;
-  float discriminant = b*b - 4*a*c;
+  const Vec3 oc = ray.origin() - pos;
+  const float a = ray.direction().length_squared();
+  const float b = 2.0 * dot(oc, ray.direction());
+  const float c = oc.length_squared() - r*r;
+  const float discriminant = b*b - 4*a*c;
 
   if (discriminant < 0) {
     return -1.0;
@@ -34,7 +34,7 @@ float Sphere::hit(const Ray& ray) const {
 }
 
 Vec3 Sphere::normal_at(const Point3& other_pos) const {
-  Vec3 dist_vec = other_pos - pos;
+  const Vec3 dist_vec = other_pos - pos;
   return unit_vector(dist_vec);
 }
 

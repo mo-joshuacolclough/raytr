@@ -33,25 +33,25 @@ Color ray_color(const Ray& r, const World& world, Color last_col, unsigned int d
   }
 
   if (t > 0.0) {    // If the ray hits something
-    Vec3 hitpos = r.at(t);
+    const Vec3 hitpos = r.at(t);
     Color final_col = hitobj->color_at(hitpos) * last_col;
-    Vec3 hitnorm = hitobj->normal_at(hitpos);
+    const Vec3 hitnorm = hitobj->normal_at(hitpos);
 
     // For each light, combine color
     // also check if light is blocked by another object
     const float numLightf = static_cast<float>(world.lights.size());
     for (const Light& l : world.lights) {
       // Get direction to light from hit pos
-      Vec3 dir = l.pos - hitpos;
-      Vec3 dir_unit = unit_vector(dir);
+      const Vec3 dir = l.pos - hitpos;
+      const Vec3 dir_unit = unit_vector(dir);
 
 #ifdef SHADOWS
       Ray shadowray = Ray(hitpos, dir_unit);
       for (const std::shared_ptr<Body>& b : world.bodies) {
-        if (b->id != hitobj->id) {
-          float d = b->hit(shadowray);
-          if (d > 0.0) return Color(0.0, 0.0, 0.0);
-        }
+        final_col *= !(b->id != hitobj->id && b->hit(shadowray) > 0.0);
+        //if (b->id != hitobj->id && b->hit(shadowray) > 0.0) {
+        //  return Color(0.0, 0.0, 0.0);
+        //}
       }
 #endif  // SHADOWS
 
@@ -65,8 +65,8 @@ Color ray_color(const Ray& r, const World& world, Color last_col, unsigned int d
 
 #ifdef REFLECTIONS
     // Reflect and call again
-    if (depth < MAX_REFLECTIONS && hitobj->reflectivity != 0.0) {
-      Ray reflected = r.reflect(hitnorm, hitpos, hitobj->reflectivity);
+    if (depth < MAX_REFLECTIONS && hitobj->reflectivity > 0.001) {
+      const Ray reflected = r.reflect(hitnorm, hitpos, hitobj->reflectivity);
       final_col = ray_color(reflected, world, final_col, depth+1);
     }
 #endif  // REFLECTIONS
@@ -79,14 +79,6 @@ Color ray_color(const Ray& r, const World& world, Color last_col, unsigned int d
 }
 
 namespace {
-
-Vec3 rotate_y(Vec3 in, float a) {
-  Vec3 out;
-  out[0] = in[0] * cos(a) + in[2] * sin(a);
-  out[1] = in[1];
-  out[2] = in[2] * cos(a) - in[0] * sin(a);
-  return out;
-}
 
 inline Uint32 to_pixel(SDL_Surface* surface, const Color& color) {
   return SDL_MapRGBA(surface->format,
@@ -105,7 +97,7 @@ int main() {
   SDL_Surface* screen_surface = nullptr;
   SDL_Init(SDL_INIT_VIDEO);
 
-  window = SDL_CreateWindow("Raytr", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
+  window = SDL_CreateWindow("Raytr", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
 
   screen_surface = SDL_GetWindowSurface(window);
 
@@ -137,11 +129,8 @@ int main() {
 
       // Keyboard
       while(SDL_PollEvent(&event) != 0) {
+        quit = quit | (event.type == SDL_QUIT);
         camera.handle_event(event);
-
-        if (event.type == SDL_QUIT) {
-          quit = true;
-        }
       }
 
       // Update

@@ -13,11 +13,11 @@ class Ray {
   Ray(const Point3& origin, const Vec3& direction);
   Ray(const Point3& origin, const Vec3& direction, const double brightness);
 
-  Point3 origin() const;
-  Vec3 direction() const;
-  Point3 at(float t) const;
+  const Point3& origin() const;
+  const Vec3& direction() const;
+  Point3 at(const float t) const;
   Ray reflect(const Vec3& normal,
-              Vec3 new_origin,
+              const Vec3 new_origin,
               const double reflectivity) const;
 
   double getBrightness() const { return brightness; }

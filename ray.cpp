@@ -13,12 +13,12 @@ Ray::Ray(const Point3& origin, const Vec3& direction, const double brightness) :
 {}
 
 
-Point3 Ray::origin() const { return o; }
-Vec3 Ray::direction() const { return dir; }
-Point3 Ray::at(float t) const { return o + t * dir; }
+const Point3& Ray::origin() const { return o; }
+const Vec3& Ray::direction() const { return dir; }
+Point3 Ray::at(const float t) const { return o + t * dir; }
 
 Ray Ray::reflect(const Vec3& normal,
-                 Vec3 new_origin,
+                 const Vec3 new_origin,
                  const double reflectivity) const {
   return Ray(new_origin, dir - 2 * dot(dir, normal) * normal, brightness);
 }
