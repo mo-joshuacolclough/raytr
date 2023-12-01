@@ -13,18 +13,18 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(SOURCES
     main.cpp
     common.h
-    camera.h camera.cpp
-    vec3.h vec3.cpp
-    ray.h ray.cpp
-    color.h color.cpp
-    body.h body.cpp
-    sphere.h sphere.cpp
-    light.h light.cpp
-    world.h world.cpp
-    ground.h ground.cpp
+    Camera.h Camera.cpp
+    Vec3.h Vec3.cpp
+    Ray.h Ray.cpp
+    Color.h Color.cpp
+    Body.h
+    Sphere.h Sphere.cpp
+    Light.h Light.cpp
+    World.h World.cpp
+    Ground.h Ground.cpp
 #    torus.h torus.cpp
 #    aacube.h aacube.cpp
-    plane.h plane.cpp
+    Plane.h Plane.cpp
 #    equation.h equation.cpp
 )
 

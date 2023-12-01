@@ -10,7 +10,7 @@
 typedef std::vector<std::shared_ptr<Body>> BodyList;
 
 class World {
-public:
+ public:
   BodyList bodies;
   std::vector<Light> lights;
   World();
