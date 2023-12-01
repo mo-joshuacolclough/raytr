@@ -1,4 +1,5 @@
-#include "light.h"
-#include "vec3.h"
+#include "Light.h"
+#include "Vec3.h"
 
-Light::Light(Point3 position, Color color) : pos(position), col(color) {}
+Light::Light(const Point3& position, const Color& color) : pos_(position), col_(color) {}
+

@@ -1,8 +1,15 @@
 #include <cmath>
-#include "vec3.h"
+#include "Vec3.h"
 
 Vec3::Vec3(): e{0.0, 0.0, 0.0} {}
 Vec3::Vec3(float x, float y, float z): e{x, y, z} {};
+
+Vec3::Vec3(const Vec3& other) : e(other.e) {};
+
+Vec3& Vec3::operator=(const Vec3& other) {
+  e = other.e;
+  return *this;
+}
 
 float Vec3::operator[](int i) const { return e[i]; }
 float& Vec3::operator[](int i) { return e[i]; }

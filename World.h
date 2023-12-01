@@ -1,11 +1,10 @@
-#ifndef WORLD_H
-#define WORLD_H
+#pragma once
 
 #include <vector>
 #include <memory>
-#include "vec3.h"
-#include "body.h"
-#include "light.h"
+#include "Vec3.h"
+#include "Body.h"
+#include "Light.h"
 
 typedef std::vector<std::shared_ptr<Body>> BodyList;
 
@@ -16,4 +15,3 @@ class World {
   World();
 };
 
-#endif // WORLD_H

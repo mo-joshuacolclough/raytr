@@ -1,20 +1,15 @@
-#include "plane.h"
-#include "ray.h"
-#include "vec3.h"
+#include "Plane.h"
+#include "Ray.h"
+#include "Vec3.h"
 
-Plane::Plane(unsigned int id_, float reflectivity_,
-             Point3 position, Color color, Vec3 normal,
-             float rotation, float width, float height) :
-  col(color),
-  norm(unit_vector(normal)), dims{ width, height }
-{
-  id = id_;
-  reflectivity = reflectivity_;
-  pos = position;
-}
+Plane::Plane(const Point3& position, const Color& color, const float reflectivity,
+             const Vec3& normal, const float rotation, const float width, const float height) :
+  Body(position, color, reflectivity),
+  norm_(unit_vector(normal)), dims_{ width, height }
+{}
 
 float Plane::hit(const Ray& ray) const {
-  float t = dot(norm, (pos - ray.origin()))/dot(norm, ray.direction());
+  float t = dot(norm_, (this->get_pos() - ray.origin()))/dot(norm_, ray.direction());
 
   // Check this is within the bounds of the plane
   //    Vec3 hitpos = ray.at(t) - pos; // Vector to hit from centre
@@ -24,6 +19,6 @@ float Plane::hit(const Ray& ray) const {
   //        return -1.0;
 }
 
-Vec3 Plane::normal_at(const Point3& other_pos) const { return norm; }
+Vec3 Plane::normal_at(const Point3& other_pos) const { return norm_; }
 
-Color Plane::color_at(const Point3& other_pos) const { return col; }
+Color Plane::color_at(const Point3& other_pos) const { return this->get_base_color(); }

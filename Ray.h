@@ -1,13 +1,8 @@
-#ifndef RAY_H
-#define RAY_H
+#pragma once
 
-#include "vec3.h"
+#include "Vec3.h"
 
 class Ray {
- private:
-  Point3 o; // Origin
-  Vec3 dir; // Direction
-  double brightness;
  public:
   Ray();
   Ray(const Point3& origin, const Vec3& direction);
@@ -17,10 +12,13 @@ class Ray {
   const Vec3& direction() const;
   Point3 at(const float t) const;
   Ray reflect(const Vec3& normal,
-              const Vec3 new_origin,
+              const Vec3& new_origin,
               const double reflectivity) const;
 
-  double getBrightness() const { return brightness; }
+  double get_brightness() const { return brightness_; }
+ private:
+  Point3 origin_; // Origin
+  Vec3 dir_; // Direction
+  double brightness_;
 };
 
-#endif // RAY_H

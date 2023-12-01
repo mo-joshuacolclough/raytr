@@ -1,7 +1,7 @@
 #include <iostream>
 #include <cmath>
-#include "vec3.h"
-#include "color.h"
+#include "Vec3.h"
+#include "Color.h"
 
 void write_color(std::ostream& out, Color pixel_color) {
   /*

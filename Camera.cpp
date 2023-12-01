@@ -1,7 +1,7 @@
 #include <cmath>
 #include <iostream>
 
-#include "camera.h"
+#include "Camera.h"
 
 constexpr float CAMERA_DA = M_PI/8.0;
 

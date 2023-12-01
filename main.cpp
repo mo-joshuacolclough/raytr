@@ -8,16 +8,16 @@
 #include <SDL2/SDL.h>
 
 #include "common.h"
-#include "camera.h"
-#include "vec3.h"
-#include "color.h"
-#include "ray.h"
-#include "body.h"
-#include "sphere.h"
-#include "light.h"
-#include "ground.h"
-#include "world.h"
-#include "plane.h"
+#include "Camera.h"
+#include "Vec3.h"
+#include "Color.h"
+#include "Ray.h"
+#include "Body.h"
+#include "Sphere.h"
+#include "Light.h"
+#include "Ground.h"
+#include "World.h"
+#include "Plane.h"
 
 Color ray_color(const Ray& r, const World& world, Color last_col, unsigned int depth) {
   float t = -1.0; // position along ray of closest hit
@@ -42,14 +42,14 @@ Color ray_color(const Ray& r, const World& world, Color last_col, unsigned int d
     const float numLightf = static_cast<float>(world.lights.size());
     for (const Light& l : world.lights) {
       // Get direction to light from hit pos
-      const Vec3 dir = l.pos - hitpos;
+      const Vec3 dir = l.get_pos() - hitpos;
       const Vec3 dir_unit = unit_vector(dir);
 
 #ifdef SHADOWS
       Ray shadowray = Ray(hitpos, dir_unit);
       for (const std::shared_ptr<Body>& b : world.bodies) {
-        final_col *= !(b->id != hitobj->id && b->hit(shadowray) > 0.0);
-        //if (b->id != hitobj->id && b->hit(shadowray) > 0.0) {
+        final_col *= !(b->get_id() != hitobj->get_id() && b->hit(shadowray) > 0.0);
+        //if (b->get_id() != hitobj->get_id() && b->hit(shadowray) > 0.0) {
         //  return Color(0.0, 0.0, 0.0);
         //}
       }
@@ -58,20 +58,20 @@ Color ray_color(const Ray& r, const World& world, Color last_col, unsigned int d
       // dot product with normal = lighting
       float d = dot(unit_vector(dir), hitnorm);
       d = d < 0.0 ? 0.0 : d;
-      final_col[0] *= l.col[0] * d / numLightf;
-      final_col[1] *= l.col[1] * d / numLightf;
-      final_col[2] *= l.col[2] * d / numLightf;
+      final_col[0] *= l.get_color()[0] * d / numLightf;
+      final_col[1] *= l.get_color()[1] * d / numLightf;
+      final_col[2] *= l.get_color()[2] * d / numLightf;
     }
 
 #ifdef REFLECTIONS
     // Reflect and call again
-    if (depth < MAX_REFLECTIONS && hitobj->reflectivity > 0.001) {
-      const Ray reflected = r.reflect(hitnorm, hitpos, hitobj->reflectivity);
+    if (depth < MAX_REFLECTIONS && hitobj->get_reflectivity() > 0.001) {
+      const Ray reflected = r.reflect(hitnorm, hitpos, hitobj->get_reflectivity());
       final_col = ray_color(reflected, world, final_col, depth+1);
     }
 #endif  // REFLECTIONS
 
-    return final_col * r.getBrightness();
+    return final_col * r.get_brightness();
   }
 
   t = 0.5 * (r.direction().y() + 1.0);
@@ -135,7 +135,7 @@ int main() {
 
       // Update
       a += 10.0 * dt;
-      world.bodies[0]->pos.y() = (std::sin(a) / 4.0) + 0.25;
+      world.bodies[0]->get_pos().y() = (std::sin(a) / 4.0) + 0.25;
 
       camera.update(dt);
       

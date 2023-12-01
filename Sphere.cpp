@@ -1,44 +1,34 @@
-#include "sphere.h"
-#include "body.h"
-#include "vec3.h"
-#include "ray.h"
+#include "Sphere.h"
+#include "Body.h"
+#include "Vec3.h"
+#include "Ray.h"
 #include <cmath>
 
-Sphere::Sphere(unsigned int id_, float reflectivity_,
-               Point3 centre, float radius, Color color) :
-  r(radius), col(color)
-{
-  id = id_;
-  reflectivity = reflectivity_;
-  pos = centre;
-}
+Sphere::Sphere(const Point3& centre, const Color& color, const float reflectivity, const float radius) :
+  Body(centre, color, reflectivity), r_(radius)
+{}
 
 float Sphere::hit(const Ray& ray) const {
   // Maths again from https://raytracing.github.io/books/RayTracingInOneWeekend.html#thevec3class/ - 6.2
-  const Vec3 oc = ray.origin() - pos;
+  const Vec3 oc = ray.origin() - this->get_pos();
   const float a = ray.direction().length_squared();
   const float b = 2.0 * dot(oc, ray.direction());
-  const float c = oc.length_squared() - r*r;
-  const float discriminant = b*b - 4*a*c;
+  const float c = oc.length_squared() - r_ * r_;
+  const float discriminant = b * b - 4 * a * c;
 
   if (discriminant < 0) {
     return -1.0;
   } else {
     return (-b - std::sqrt(discriminant))/(2.0 * a);
   }
-
-  /*
-    bool not_hit = discriminant < 0;
-    return (not_hit * -1.0) + ((!not_hit) * (-b - std::sqrt(discriminant))/(2.0 * a));
-    */
 }
 
 Vec3 Sphere::normal_at(const Point3& other_pos) const {
-  const Vec3 dist_vec = other_pos - pos;
+  const Vec3 dist_vec = other_pos - this->get_pos();
   return unit_vector(dist_vec);
 }
 
-Color Sphere::color_at(const Point3& other_pos) const { return col; }
+Color Sphere::color_at(const Point3& other_pos) const { return this->get_base_color(); }
 
 /*
 Color Sphere::color_at(const Point3& other_pos) const {

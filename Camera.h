@@ -4,8 +4,8 @@
 #include <SDL2/SDL.h>
 
 #include "common.h"
-#include "ray.h"
-#include "vec3.h"
+#include "Ray.h"
+#include "Vec3.h"
 
 // (maths from https://raytracing.github.io/books/RayTracingInOneWeekend.html/)
 
